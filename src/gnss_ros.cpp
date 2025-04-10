@@ -19,6 +19,8 @@
 */
 
 #include "gnss_ros.hpp"
+#include "gnss_constant.hpp"
+#include <vector>
 
 namespace gnss_comm
 {
@@ -219,6 +221,7 @@ namespace gnss_comm
         }
         return meas;
     }
+
 
     GnssTimePulseInfoMsg tp_info2msg(const TimePulseInfoPtr &tp_info)
     {

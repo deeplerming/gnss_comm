@@ -19,6 +19,7 @@
 */
 
 #include "rinex_helper.hpp"
+#include "gnss_constant.hpp"
 
 namespace gnss_comm
 {
@@ -626,4 +627,36 @@ namespace gnss_comm
 
         fclose(fp);
     }
+
+	void ephems2nav(const std::string &nav_filepath, 
+        const std::vector<EphemPtr> &gnss_ephem)
+	{
+		FILE *fp = fopen(nav_filepath.c_str(), "w");
+		fprintf(fp, "%9.2f%-11s%-20s%-20s%-20s\n", 3.04, "", "NAVIGATION DATA", 
+			"M: Mixed", "RINEX VERSION / TYPE");
+		std::time_t time_ptr;
+		time_ptr = time(NULL);
+		tm *tm_utc = gmtime(&time_ptr);
+		char date_str[256];
+		sprintf(date_str, "%4d%02d%02d %02d%02d%02d UTC", tm_utc->tm_year+1900, tm_utc->tm_mon+1, 
+			tm_utc->tm_mday, tm_utc->tm_hour, tm_utc->tm_min, tm_utc->tm_sec);
+		fprintf(fp, "%-20.20s%-20.20s%-20.20s%-20s\n","gnss_comm ephems2nav", "", date_str,
+			"PGM / RUN BY / DATE");
+		fprintf(fp, "%-60.60s%-20s\n", "", "MARKER NAME");
+		fprintf(fp, "%-20.20s%-40.40s%-20s\n", "", "", "MARKER NUMBER");
+		fprintf(fp, "%-20.20s%-40.40s%-20s\n", "", "", "MARKER TYPE");
+		fprintf(fp, "%-20.20s%-40.40s%-20s\n", "", "", "OBSERVER / AGENCY");
+		fprintf(fp, "%-20.20s%-20.20s%-20.20s%-20s\n", "", "", "", "REC # / TYPE / VERS");
+		fprintf(fp, "%-20.20s%-20.20s%-20.20s%-20s\n", "", "", "", "ANT # / TYPE");
+		// ignore approximate position
+		fprintf(fp, "%-14.14s%-14.14s%-14.14s%-18s%-20s\n", "", "", "", "", "APPROX POSITION XYZ");
+		fprintf(fp, "%-14.14s%-14.14s%-14.14s%-18s%-20s\n", "", "", "", "", "ANTENNA: DELTA H/E/N");
+
+		fclose(fp);
+
+		if (!gnss_ephem.empty())
+		{
+			
+		}
+	}
 }   // namespace gnss_comm

@@ -66,8 +66,14 @@ namespace gnss_comm
     *---------------------------------------------------------------------------------------------*/
     void rinex2iono_params(const std::string &rinex_filepath, std::vector<double> &iono_params);
 
+    /* parse GPS ionosphere from RINEX navigation file  ------------------------------------------
+    * args   : std::string                      rinex_filepath        I   RINEX file path
+    *          std::vector<double>              iono_params           IO  8 ionosphere parameters (alpha 1~4, beta 1~4)
+    * return : None
+    *---------------------------------------------------------------------------------------------*/
+	void ephems2nav(const std::string &rinex_filepath, const std::vector<EphemPtr> &gnss_ephems);
 
 }   // namespace gnss_comm
 
 
-#endif
+#endif  
