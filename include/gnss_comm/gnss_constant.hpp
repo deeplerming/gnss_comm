@@ -514,7 +514,75 @@ namespace gnss_comm
         double tgd;
     };
     typedef std::shared_ptr<SatState> SatStatePtr;
+	struct SatelliteData 
+	{
+		SatelliteData() : pseudorange(0), carrier_phase(0), sat_id(0), elevation(0) {}
+		SatelliteData(double psr, double cp, Eigen::Vector3d satpos, double satclk, int sat_id, double ele)
+		{
+			pseudorange = psr;
+			carrier_phase = cp;
+			sat_pos = satpos;
+			sat_clk = satclk;
+			this->sat_id = sat_id;
+			elevation = ele;
+			initialized = true;
+		}
+		double pseudorange;
+		double carrier_phase;
+		Eigen::Vector3d sat_pos;
+		double sat_clk;
+		int sat_id;
+		double elevation;
+
+		bool initialized = false;
+	};
+	typedef std::shared_ptr<SatelliteData> SatelliteDataPtr;
+
+	// GnssDataPtr data;
+	struct GnssData
+	{
+		GnssData();
+		std::vector<ObsPtr> obs_vec;
+		std::vector<EphemBasePtr> ephem_vec;
+
+		void processGNSSData(const Eigen::Vector3d & ref_ecef);
+
+		std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> sv_pos;  //
+		std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> sv_vel;  //
+		std::map<int, SatelliteData> sat2satdata;
+		std::map<int, ObsPtr> sat2obs;
+		std::vector<double> svdt, svddt, tgd, ion_delay, tro_delay;
+		std::vector<double> pr_uura, dp_uura;
+		std::vector<int> freq_idx;
+		int mPrn = -1;
+		int m_id = -1;
+		double rcv_ddt = 0.0;
+		double rcv_dt = 0.0;
+		double ratio = 0.0;
+		double max_ele = -1;
+	};
+
+	typedef std::shared_ptr<GnssData> GnssDataPtr;	
+
+	struct DDMeasurement
+	{
+		// 基站和流动接收机的双差卫星数据
+		SatelliteData u_master_SV;   // 基站主卫星
+		SatelliteData u_iSV;         // 基站副卫星
+		SatelliteData r_master_SV;   // 流动接收机主卫星
+		SatelliteData r_iSV;         // 流动接收机副卫星
+
+		// 双差伪距和载波相位
+		double var_pr, var_cp;   // 伪距和载波相位的方差 
+		double dd_pseudorange;   // 双差伪距
+		double dd_carrier_phase; // 双差载波相位
+
+		// 构造函数
+		DDMeasurement() : var_pr(0.0), var_cp(0.0), dd_pseudorange(0.0), dd_carrier_phase(0.0) {}
+	};
+
 }   // namespace gnss_comm
+
 
 #endif
 
