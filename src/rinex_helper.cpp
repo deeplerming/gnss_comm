@@ -19,6 +19,7 @@
 */
 
 #include "rinex_helper.hpp"
+#include "gnss_constant.hpp"
 
 namespace gnss_comm
 {
@@ -626,4 +627,89 @@ namespace gnss_comm
 
         fclose(fp);
     }
+
+void ephems2nav(const std::string &nav_filepath, const std::vector<EphemPtr> &gnss_ephem)
+{
+    FILE *fp = fopen(nav_filepath.c_str(), "w");
+    if (!fp)
+    {
+        LOG(ERROR) << "Failed to open nav file: " << nav_filepath;
+        return;
+    }
+
+    // --------------------------
+    // 写入 RINEX 3.04 文件头部
+    // --------------------------
+    fprintf(fp, "%9.2f%-11s%-20s%-20s%-20s\n", 3.04, "", "NAVIGATION DATA", 
+            "G: GPS", "RINEX VERSION / TYPE");
+
+    std::time_t time_ptr = time(NULL);
+    tm *tm_utc = gmtime(&time_ptr);
+    char date_str[256];
+    sprintf(date_str, "%4d%02d%02d %02d%02d%02d UTC", tm_utc->tm_year+1900, tm_utc->tm_mon+1, 
+            tm_utc->tm_mday, tm_utc->tm_hour, tm_utc->tm_min, tm_utc->tm_sec);
+    fprintf(fp, "%-20s%-20s%-20s%-20s\n", "gnss_comm", "", date_str, "PGM / RUN BY / DATE");
+    fprintf(fp, "%-60s%-20s\n", "", "END OF HEADER");
+
+    // --------------------------
+    // 写入每颗卫星的8行星历数据
+    // --------------------------
+    for (const auto& eph : gnss_ephem)
+    {
+        if (!eph) continue;
+
+        uint32_t sys = satsys(eph->sat, NULL);
+        char sys_char = ' ';
+        if      (sys == SYS_GPS) sys_char = 'G';
+        else if (sys == SYS_BDS) sys_char = 'C';
+        else if (sys == SYS_GAL) sys_char = 'E';
+        else continue;  // 不支持其他系统
+
+        std::string sat_str = sat2str(eph->sat);  // e.g., "G12"
+
+        double ep[6];
+        time2epoch(eph->toc, ep);  // ep: year, month, day, hour, minute, second
+
+        double sqrtA = std::sqrt(eph->A);
+
+        // 第一行：卫星 + 星历参考时间 + 钟差参数
+        fprintf(fp, "%c%02d %4.0f %02.0f %02.0f %02.0f %02.0f%12.7f%19.12E%19.12E%19.12E\n",
+            sys_char, eph->sat % 100,
+            ep[0], ep[1], ep[2], ep[3], ep[4], ep[5],
+            eph->af0, eph->af1, eph->af2);
+    
+
+        // 第二行
+        fprintf(fp, "    %19.12E%19.12E%19.12E%19.12E\n",
+                eph->iode, eph->crs, eph->delta_n, eph->M0);
+
+        // 第三行
+        fprintf(fp, "    %19.12E%19.12E%19.12E%19.12E\n",
+                eph->cuc, eph->e, eph->cus, sqrtA);
+
+        // 第四行
+        fprintf(fp, "    %19.12E%19.12E%19.12E%19.12E\n",
+                eph->toe_tow, eph->cic, eph->OMG0, eph->cis);
+
+        // 第五行
+        fprintf(fp, "    %19.12E%19.12E%19.12E%19.12E\n",
+                eph->i0, eph->crc, eph->omg, eph->OMG_dot);
+
+        // 第六行
+        fprintf(fp, "    %19.12E%19.12E%19d%19.12E\n",
+                eph->i_dot, 0.0, eph->week, 0.0);
+
+        // 第七行
+        fprintf(fp, "    %19.12E%19d%19.12E%19.12E\n",
+                eph->ura, eph->health, eph->tgd[0], eph->tgd[1]);
+
+        // 第八行
+        double ttr_sec = eph->ttr.sec;
+        fprintf(fp, "    %19.12E%19.12E%19.12E%19.12E\n",
+                ttr_sec, 0.0, 0.0, 0.0);
+    }
+
+    fclose(fp);
+    LOG(INFO) << "RINEX nav file written: " << nav_filepath;
+}
 }   // namespace gnss_comm
