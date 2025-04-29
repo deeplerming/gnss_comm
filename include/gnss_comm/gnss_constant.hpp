@@ -567,15 +567,16 @@ namespace gnss_comm
 	struct DDMeasurement
 	{
 		// 基站和流动接收机的双差卫星数据
-		SatelliteData u_master_SV;   // 基站主卫星
-		SatelliteData u_iSV;         // 基站副卫星
-		SatelliteData r_master_SV;   // 流动接收机主卫星
-		SatelliteData r_iSV;         // 流动接收机副卫星
+		SatelliteData u_master_SV;   // 流动站主卫星
+		SatelliteData u_iSV;         // 流动站副卫星
+		SatelliteData r_master_SV;   // 基站主卫星
+		SatelliteData r_iSV;         // 基站副卫星
 
 		// 双差伪距和载波相位
 		double var_pr, var_cp;   // 伪距和载波相位的方差 
 		double dd_pseudorange;   // 双差伪距
 		double dd_carrier_phase; // 双差载波相位
+		double wavelength;      // 波长
 
 		// 构造函数
 		DDMeasurement() : var_pr(0.0), var_cp(0.0), dd_pseudorange(0.0), dd_carrier_phase(0.0) {}

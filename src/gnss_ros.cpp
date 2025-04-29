@@ -193,6 +193,7 @@ namespace gnss_comm
 
             gnss_meas_msg.meas.push_back(obs_msg);
         }
+		gnss_meas_msg.header.stamp = ros::Time(time2sec(meas[0]->time));
         return gnss_meas_msg;
     }
 
