@@ -517,7 +517,7 @@ namespace gnss_comm
 	struct SatelliteData 
 	{
 		SatelliteData() : pseudorange(0), carrier_phase(0), sat_id(0), elevation(0) {}
-		SatelliteData(double psr, double cp, Eigen::Vector3d satpos, double satclk, int sat_id, double ele)
+		SatelliteData(double psr, double cp, Eigen::Vector3d satpos, double satclk, uint32_t sat_id, double ele)
 		{
 			pseudorange = psr;
 			carrier_phase = cp;
@@ -547,8 +547,8 @@ namespace gnss_comm
 
 		void processGNSSData(const Eigen::Vector3d & ref_ecef);
 
-		std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> sv_pos;  //
-		std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> sv_vel;  //
+		std::vector<Eigen::Vector3d> sv_pos;  //
+		std::vector<Eigen::Vector3d> sv_vel;  //
 		std::map<int, SatelliteData> sat2satdata;
 		std::map<int, ObsPtr> sat2obs;
 		std::vector<double> svdt, svddt, tgd, ion_delay, tro_delay;
