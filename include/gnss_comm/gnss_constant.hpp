@@ -516,7 +516,7 @@ namespace gnss_comm
     typedef std::shared_ptr<SatState> SatStatePtr;
 	struct SatelliteData 
 	{
-		SatelliteData() : pseudorange(0), carrier_phase(0), sat_id(0), elevation(0) {}
+		SatelliteData() : pseudorange(0), carrier_phase(0), sat_id(0), elevation(0) {initialized = true;}
 		SatelliteData(double psr, double cp, Eigen::Vector3d satpos, double satclk, uint32_t sat_id, double ele)
 		{
 			pseudorange = psr;
@@ -529,8 +529,11 @@ namespace gnss_comm
 		}
 		double pseudorange;
 		double carrier_phase;
+		double doppler;
 		Eigen::Vector3d sat_pos;
+		Eigen::Vector3d sat_vel;
 		double sat_clk;
+		double sat_ddt;
 		int sat_id;
 		double elevation;
 
@@ -545,7 +548,7 @@ namespace gnss_comm
 		std::vector<ObsPtr> obs_vec;
 		std::vector<EphemBasePtr> ephem_vec;
 
-		void processGNSSData(const Eigen::Vector3d & ref_ecef);
+		void processGNSSData(const Eigen::Matrix<double, 5, 1> & ref_ecef);
 
 		std::vector<Eigen::Vector3d> sv_pos;  //
 		std::vector<Eigen::Vector3d> sv_vel;  //
@@ -554,10 +557,14 @@ namespace gnss_comm
 		std::vector<double> svdt, svddt, tgd, ion_delay, tro_delay;
 		std::vector<double> pr_uura, dp_uura;
 		std::vector<int> freq_idx;
+		std::vector<double> freqs;
 		int mPrn = -1;
-		int m_id = -1;
+		int m_sat_id = -1;
+		Eigen::Vector3d mSat_Pos; // ECEF
+		Eigen::Vector3d mSat_Vel; // ECEF
+		Eigen::Vector3d ref_ecef_; // ECEF
 		double rcv_ddt = 0.0;
-		double rcv_dt = 0.0;
+		double rcv_dt[2];
 		double ratio = 0.0;
 		double max_ele = -1;
 	};
@@ -584,9 +591,4 @@ namespace gnss_comm
 
 }   // namespace gnss_comm
 
-
 #endif
-
-
-
-
