@@ -587,6 +587,18 @@ namespace gnss_comm
 
 		// 构造函数
 		DDMeasurement() : var_pr(0.0), var_cp(0.0), dd_pseudorange(0.0), dd_carrier_phase(0.0) {}
+		void clear()
+		{
+			u_iSV = SatelliteData();
+			u_master_SV = SatelliteData();
+			r_iSV = SatelliteData();
+			r_master_SV = SatelliteData();
+			var_pr = 0.0;
+			var_cp = 0.0;
+			dd_pseudorange = 0.0;
+			dd_carrier_phase = 0.0;
+			wavelength = 0.0;
+		}
 	};
 
 }   // namespace gnss_comm
