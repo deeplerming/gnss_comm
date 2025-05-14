@@ -530,6 +530,7 @@ namespace gnss_comm
 		double pseudorange;
 		double carrier_phase;
 		double doppler;
+		double ar_f;
 		Eigen::Vector3d sat_pos;
 		Eigen::Vector3d sat_vel;
 		double sat_clk;
