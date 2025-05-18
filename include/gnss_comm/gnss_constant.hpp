@@ -29,8 +29,9 @@
 *         Copyright (c) 2007-2020, T. Takasu, All rights reserved.
 */
 
-#ifndef GNSS_CONSTANT_HPP_
-#define GNSS_CONSTANT_HPP_
+#pragma once
+#ifndef GNSS_COMM_GTIME_T
+#define GNSS_COMM_GTIME_T
 
 #include <iostream>
 #include <vector>
@@ -530,6 +531,7 @@ namespace gnss_comm
 		double pseudorange;
 		double carrier_phase;
 		double doppler;
+		double wavelength;
 		double ar_f;
 		Eigen::Vector3d sat_pos;
 		Eigen::Vector3d sat_vel;
@@ -538,6 +540,7 @@ namespace gnss_comm
 		int sat_id;
 		double elevation;
 
+		gtime_t ttx; // time of transmission
 		bool initialized = false;
 	};
 	typedef std::shared_ptr<SatelliteData> SatelliteDataPtr;
