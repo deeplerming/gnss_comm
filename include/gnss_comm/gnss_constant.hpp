@@ -584,10 +584,12 @@ namespace gnss_comm
 		SatelliteData r_iSV;         // 基站副卫星
 
 		// 双差伪距和载波相位
-		double var_pr, var_cp;   // 伪距和载波相位的方差 
+		double var_pr, var_cp, var_dopp;   // 伪距和载波相位的方差 
 		double dd_pseudorange;   // 双差伪距
 		double dd_carrier_phase; // 双差载波相位
+		double dd_doppler;       // 双差多普勒频率
 		double wavelength;      // 波长
+		gtime_t ttx; // 伪距和载波相位的接收时间
 
 		// 构造函数
 		DDMeasurement() : var_pr(0.0), var_cp(0.0), dd_pseudorange(0.0), dd_carrier_phase(0.0) {}
@@ -603,6 +605,24 @@ namespace gnss_comm
 			dd_carrier_phase = 0.0;
 			wavelength = 0.0;
 		}
+	};
+
+	struct TripleDMeasurement
+	{
+		SatelliteData u_master_SV;
+		SatelliteData u_iSV;
+		SatelliteData r_master_SV;
+		SatelliteData r_iSV;
+		
+		SatelliteData u_last_master_SV;
+		SatelliteData u_last_iSV;
+		SatelliteData r_last_master_SV;
+		SatelliteData r_last_iSV;
+
+		double var;
+		double td_pseudorange, td_carrier, td_doppler;
+		double wavelenth;
+		gtime_t ttx;
 	};
 
 }   // namespace gnss_comm

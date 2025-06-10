@@ -90,6 +90,12 @@ namespace gnss_comm
     *----------------------------------------------------------------------------------------------------*/
     Eigen::Matrix<double, 4, 1> dopp_vel(const std::vector<ObsPtr> &obs, 
         const std::vector<EphemBasePtr> &ephems, Eigen::Vector3d &ref_ecef);
+
+	void DDdopp_res(const Eigen::Matrix<double, 3, 1>& rcv_state, const Eigen::Vector3d &rcv_ecef, const Eigen::Vector3d& rover_pos, 
+		const std::map<int, DDMeasurement> &dd_meas, Eigen::VectorXd &res, Eigen::MatrixXd &J);
+
+	void DDPsr_res(const Eigen::Matrix<double, 3, 1>& rcv_state, const Eigen::Vector3d &rcv_ecef, 
+		const std::map<int, DDMeasurement> &dd_meas, Eigen::VectorXd &res, Eigen::MatrixXd &J);
 }
 
 #endif

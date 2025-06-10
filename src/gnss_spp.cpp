@@ -19,8 +19,12 @@
 */
 
 #include "gnss_spp.hpp"
+#include "Eigen/src/Core/Matrix.h"
+#include "gnss_constant.hpp"
 #include "gnss_utility.hpp"
+#include <cstdint>
 #include <glog/logging.h>
+#include <map>
 
 #define CUT_OFF_DEGREE 15.0
 
@@ -280,6 +284,75 @@ namespace gnss_comm
             J(i, 3) = 1.0;
         }
     }
+
+	void DDdopp_res(const Eigen::Matrix<double, 3, 1>& rcv_state, const Eigen::Vector3d &rcv_ecef, const Eigen::Vector3d& rover_pos, 
+					const std::map<int, DDMeasurement> &dd_meas, Eigen::VectorXd &res, Eigen::MatrixXd &J)
+	{
+		const uint32_t num_sv = dd_meas.size();
+		// clear output
+		res = Eigen::VectorXd::Zero(num_sv);
+		J = Eigen::MatrixXd::Zero(num_sv, 3);
+
+		for(uint32_t i = 0; i < num_sv; ++i)
+		{
+			Eigen::Vector3d sat_pos_b1, sat_pos_b2, sat_pos_r1, sat_pos_r2;
+			Eigen::Vector3d sat_vel_b1, sat_vel_b2, sat_vel_r1, sat_vel_r2;
+			auto it = dd_meas.begin();
+			const DDMeasurement &dd_m = it->second;
+			std::advance(it, i);
+
+			sat_pos_b1 = dd_m.u_master_SV.sat_pos;
+			sat_pos_b2 = dd_m.u_iSV.sat_pos;
+			sat_pos_r1 = dd_m.r_master_SV.sat_pos;
+			sat_pos_r2 = dd_m.r_iSV.sat_pos;
+			sat_vel_b1 = dd_m.u_master_SV.sat_vel;
+			sat_vel_b2 = dd_m.u_iSV.sat_vel;
+			sat_vel_r1 = dd_m.r_master_SV.sat_vel;
+			sat_vel_r2 = dd_m.r_iSV.sat_vel;			
+			
+			// double sagnac_term = EARTH_OMG_GPS/LIGHT_SPEED*(
+			// 	sv_vel(0)*rcv_ecef(1) + sv_pos(0)*rcv_state(1) - 
+			// 	sv_vel(1)*rcv_ecef(0) - sv_pos(1)*rcv_state(0));
+
+			double expected_delta_dopp =
+				-(sat_pos_b1 - rcv_ecef).normalized().dot(sat_vel_b1 - rcv_state) +
+				(sat_pos_b2 - rcv_ecef).normalized().dot(sat_vel_b2 - rcv_state) +
+				(sat_pos_r1 - rover_pos).normalized().dot(sat_vel_r1) -
+				(sat_pos_r2 - rover_pos).normalized().dot(sat_vel_r2);
+
+			res(i) = expected_delta_dopp - dd_m.dd_doppler;
+			J.block(i, 0, 0, 2) = -1.0 * (sat_pos_b1 - rcv_ecef).normalized().transpose() + 
+																		   1.0 * (sat_pos_b2 - rcv_ecef).normalized().transpose();
+		}
+	}
+
+	void DDPsr_res(const Eigen::Matrix<double, 3, 1>& rcv_state, const Eigen::Vector3d &rcv_ecef, 
+					const std::map<int, DDMeasurement> &dd_meas, Eigen::VectorXd &res, Eigen::MatrixXd &J)
+	{
+		const uint32_t num_sv = dd_meas.size();
+		// clear output
+		res = Eigen::VectorXd::Zero(num_sv);
+		J = Eigen::MatrixXd::Zero(num_sv, 3);
+		Eigen::Vector3d rover_pos = rcv_state;
+		for(uint32_t i = 0; i < num_sv; ++i)
+		{
+			Eigen::Vector3d sat_pos_b1, sat_pos_b2, sat_pos_r1, sat_pos_r2;
+			auto it = dd_meas.begin();
+			const DDMeasurement &dd_m = it->second;
+			std::advance(it, i);
+			sat_pos_b1 = dd_m.u_master_SV.sat_pos;
+			sat_pos_b2 = dd_m.u_iSV.sat_pos;
+			sat_pos_r1 = dd_m.r_master_SV.sat_pos;
+			sat_pos_r2 = dd_m.r_iSV.sat_pos;
+
+			double expected_delta_psr =
+				(sat_pos_b1 - rcv_ecef).norm() - (sat_pos_b2 - rcv_ecef).norm() -
+				(sat_pos_r1 - rover_pos).norm() + (sat_pos_r2 - rover_pos).norm();
+			res(i) = expected_delta_psr - dd_m.dd_pseudorange;
+			J.block(i, 0, 1, 2) = - (rover_pos - sat_pos_r1)/(sat_pos_r1 - rover_pos).norm() 
+																		  + (rover_pos - sat_pos_r2)/(sat_pos_r2 - rover_pos).norm();
+		}
+	}
 
     Eigen::Matrix<double, 4, 1> dopp_vel(const std::vector<ObsPtr> &obs, 
         const std::vector<EphemBasePtr> &ephems, Eigen::Vector3d &ref_ecef)
