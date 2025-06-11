@@ -349,7 +349,7 @@ namespace gnss_comm
 				(sat_pos_b1 - rcv_ecef).norm() - (sat_pos_b2 - rcv_ecef).norm() -
 				(sat_pos_r1 - rover_pos).norm() + (sat_pos_r2 - rover_pos).norm();
 			res(i) = expected_delta_psr - dd_m.dd_pseudorange;
-			J.block(i, 0, 1, 2) = - (rover_pos - sat_pos_r1)/(sat_pos_r1 - rover_pos).norm() 
+			J.block<1, 3>(i, 0) = -(rover_pos - sat_pos_r1)/(sat_pos_r1 - rover_pos).norm() 
 																		  + (rover_pos - sat_pos_r2)/(sat_pos_r2 - rover_pos).norm();
 		}
 	}
