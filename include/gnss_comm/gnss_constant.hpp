@@ -621,10 +621,45 @@ namespace gnss_comm
 
 		double var;
 		double td_pseudorange, td_carrier, td_doppler;
-		double wavelenth;
+		double wavelength;
 		gtime_t ttx;
 	};
 
+	struct TimeDiffDMeasurement
+	{
+		SatelliteData u_iSV;
+		SatelliteData r_iSV;
+		SatelliteData u_last_iSV;
+		SatelliteData r_last_iSV;
+
+		double var;
+		double tdd_carrier, wavelength;
+		gtime_t ttx;
+	};
+
+	struct TimeDiffMSMeasurement
+	{
+		SatelliteData iSV;
+		SatelliteData master_SV;
+		SatelliteData last_master_SV;
+		SatelliteData last_iSV;
+
+		double var;
+		double tdms_carrier, wavelength;
+		gtime_t ttx;
+
+		TimeDiffMSMeasurement() : var(0.0), tdms_carrier(0.0), wavelength(0.0) {}
+		void clear()
+		{
+			iSV = SatelliteData();
+			master_SV = SatelliteData();
+			last_iSV = SatelliteData();
+			last_master_SV = SatelliteData();
+			var = 0.0;
+			tdms_carrier = 0.0;
+			wavelength = 0.0;
+		}
+	};
 }   // namespace gnss_comm
 
 #endif
