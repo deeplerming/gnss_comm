@@ -639,6 +639,16 @@ namespace gnss_comm
 
 	struct TimeDiffMSMeasurement
 	{
+		SatelliteData u_master_SV;
+		SatelliteData u_iSV;
+		SatelliteData r_master_SV;
+		SatelliteData r_iSV;
+		
+		SatelliteData u_last_master_SV;
+		SatelliteData u_last_iSV;
+		SatelliteData r_last_master_SV;
+		SatelliteData r_last_iSV;
+
 		SatelliteData iSV;
 		SatelliteData master_SV;
 		SatelliteData last_master_SV;
@@ -651,12 +661,71 @@ namespace gnss_comm
 		TimeDiffMSMeasurement() : var(0.0), tdms_carrier(0.0), wavelength(0.0) {}
 		void clear()
 		{
-			iSV = SatelliteData();
-			master_SV = SatelliteData();
-			last_iSV = SatelliteData();
-			last_master_SV = SatelliteData();
 			var = 0.0;
 			tdms_carrier = 0.0;
+			wavelength = 0.0;
+		}
+	};
+
+	struct TimeDiffMSRBMeasurement
+	{
+		SatelliteData u_master_SV;
+		SatelliteData u_iSV;
+		SatelliteData r_master_SV;
+		SatelliteData r_iSV;
+		
+		SatelliteData u_last_master_SV;
+		SatelliteData u_last_iSV;
+		SatelliteData r_last_master_SV;
+		SatelliteData r_last_iSV;
+
+		Eigen::Vector3d last_rover_pos, lase_base_pos; // 流动站主卫星位置
+		double var;
+		double tdmsrb_carrier, wavelength;
+		gtime_t ttx;
+
+		TimeDiffMSRBMeasurement(SatelliteData u_master_SV_, SatelliteData u_iSV_,
+			SatelliteData r_master_SV_, SatelliteData r_iSV_,
+			SatelliteData u_last_master_SV_, SatelliteData u_last_iSV_,
+			SatelliteData r_last_master_SV_, SatelliteData r_last_iSV_, Eigen::Vector3d last_position_, Eigen::Vector3d last_base_pos_)
+			: var(0.0), tdmsrb_carrier(0.0), wavelength(0.0), 
+			u_master_SV(u_master_SV_), u_iSV(u_iSV_), r_master_SV(r_master_SV_), r_iSV(r_iSV_),
+			u_last_master_SV(u_last_master_SV_), u_last_iSV(u_last_iSV_),
+			r_last_master_SV(r_last_master_SV_), r_last_iSV(r_last_iSV_), last_rover_pos(last_position_), lase_base_pos(last_base_pos_)
+		{
+			double DeltaD_rs, DeltaD_rm, DeltaD_bm, DeltaD_bs;
+			double DeltaG_rs, DeltaG_rm, DeltaG_bm, DeltaG_bs;
+			Eigen::Vector3d sat_pos_s_b_k_1, sat_pos_m_b_k_1, sat_pos_b_s_k, sat_pos_b_m_k;
+			Eigen::Vector3d sat_pos_s_r_k_1, sat_pos_m_r_k_1, sat_pos_r_s_k, sat_pos_r_m_k;
+			sat_pos_b_m_k = u_master_SV.sat_pos;
+			sat_pos_b_s_k = u_iSV.sat_pos;
+			sat_pos_r_m_k = r_master_SV.sat_pos;
+			sat_pos_r_s_k = r_iSV.sat_pos;
+	
+			sat_pos_m_b_k_1 = u_last_master_SV.sat_pos;
+			sat_pos_s_b_k_1 = u_last_iSV.sat_pos;
+			sat_pos_m_r_k_1 = r_last_master_SV.sat_pos;
+			sat_pos_s_r_k_1 = r_last_iSV.sat_pos;
+
+			DeltaD_rs = (sat_pos_r_s_k - last_rover_pos).dot(sat_pos_r_s_k) - (sat_pos_s_r_k_1 - last_rover_pos).dot(sat_pos_s_r_k_1);
+			DeltaG_rs = (sat_pos_r_s_k - last_rover_pos).dot(last_rover_pos) - (sat_pos_s_r_k_1 - last_rover_pos).dot(last_rover_pos);
+			DeltaD_rm = (sat_pos_r_m_k - last_rover_pos).dot(sat_pos_r_m_k) - (sat_pos_m_r_k_1 - last_rover_pos).dot(sat_pos_m_r_k_1);
+			DeltaG_rm = (sat_pos_r_m_k - last_rover_pos).dot(last_rover_pos) - (sat_pos_m_r_k_1 - last_rover_pos).dot(last_rover_pos);
+			DeltaD_bm = (sat_pos_b_m_k - lase_base_pos).dot(sat_pos_b_m_k) - (sat_pos_m_b_k_1 - lase_base_pos).dot(sat_pos_m_b_k_1);
+			DeltaG_bm = (sat_pos_b_m_k - lase_base_pos).dot(lase_base_pos) - (sat_pos_m_b_k_1 - lase_base_pos).dot(lase_base_pos);
+			DeltaD_bs = (sat_pos_b_s_k - lase_base_pos).dot(sat_pos_b_s_k) - (sat_pos_s_b_k_1 - lase_base_pos).dot(sat_pos_s_b_k_1);
+			DeltaG_bs = (sat_pos_b_s_k - lase_base_pos).dot(lase_base_pos) - (sat_pos_s_b_k_1 - lase_base_pos).dot(lase_base_pos);
+
+			tdmsrb_carrier = (u_iSV.carrier_phase - u_last_iSV.carrier_phase - DeltaD_bs + DeltaG_bs) 
+						   - (u_master_SV.carrier_phase - u_last_master_SV.carrier_phase - DeltaD_bm + DeltaG_bm)
+						   - (r_iSV.carrier_phase - r_last_iSV.carrier_phase- DeltaD_rs + DeltaG_rs) 
+						   + (r_master_SV.carrier_phase - r_last_master_SV.carrier_phase - DeltaD_rm + DeltaG_rm);
+		}
+		TimeDiffMSRBMeasurement() : var(0.0), tdmsrb_carrier(0.0), wavelength(0.0) {}
+		void clear()
+		{
+			var = 0.0;
+			tdmsrb_carrier = 0.0;
 			wavelength = 0.0;
 		}
 	};
