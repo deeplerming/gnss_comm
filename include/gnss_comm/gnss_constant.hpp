@@ -707,14 +707,14 @@ namespace gnss_comm
 			sat_pos_m_r_k_1 = r_last_master_SV.sat_pos;
 			sat_pos_s_r_k_1 = r_last_iSV.sat_pos;
 
-			DeltaD_rs = (sat_pos_r_s_k - last_rover_pos).dot(sat_pos_r_s_k) - (sat_pos_s_r_k_1 - last_rover_pos).dot(sat_pos_s_r_k_1);
-			DeltaG_rs = (sat_pos_r_s_k - last_rover_pos).dot(last_rover_pos) - (sat_pos_s_r_k_1 - last_rover_pos).dot(last_rover_pos);
-			DeltaD_rm = (sat_pos_r_m_k - last_rover_pos).dot(sat_pos_r_m_k) - (sat_pos_m_r_k_1 - last_rover_pos).dot(sat_pos_m_r_k_1);
-			DeltaG_rm = (sat_pos_r_m_k - last_rover_pos).dot(last_rover_pos) - (sat_pos_m_r_k_1 - last_rover_pos).dot(last_rover_pos);
-			DeltaD_bm = (sat_pos_b_m_k - lase_base_pos).dot(sat_pos_b_m_k) - (sat_pos_m_b_k_1 - lase_base_pos).dot(sat_pos_m_b_k_1);
-			DeltaG_bm = (sat_pos_b_m_k - lase_base_pos).dot(lase_base_pos) - (sat_pos_m_b_k_1 - lase_base_pos).dot(lase_base_pos);
-			DeltaD_bs = (sat_pos_b_s_k - lase_base_pos).dot(sat_pos_b_s_k) - (sat_pos_s_b_k_1 - lase_base_pos).dot(sat_pos_s_b_k_1);
-			DeltaG_bs = (sat_pos_b_s_k - lase_base_pos).dot(lase_base_pos) - (sat_pos_s_b_k_1 - lase_base_pos).dot(lase_base_pos);
+			DeltaD_rs = (sat_pos_r_s_k - last_rover_pos).normalized().dot(sat_pos_r_s_k) - (sat_pos_s_r_k_1 - last_rover_pos).normalized().dot(sat_pos_s_r_k_1);
+			DeltaG_rs = (sat_pos_r_s_k - last_rover_pos).normalized().dot(last_rover_pos) - (sat_pos_s_r_k_1 - last_rover_pos).normalized().dot(last_rover_pos);
+			DeltaD_rm = (sat_pos_r_m_k - last_rover_pos).normalized().dot(sat_pos_r_m_k) - (sat_pos_m_r_k_1 - last_rover_pos).normalized().dot(sat_pos_m_r_k_1);
+			DeltaG_rm = (sat_pos_r_m_k - last_rover_pos).normalized().dot(last_rover_pos) - (sat_pos_m_r_k_1 - last_rover_pos).normalized().dot(last_rover_pos);
+			DeltaD_bm = (sat_pos_b_m_k - lase_base_pos).normalized().dot(sat_pos_b_m_k) - (sat_pos_m_b_k_1 - lase_base_pos).normalized().dot(sat_pos_m_b_k_1);
+			DeltaG_bm = (sat_pos_b_m_k - lase_base_pos).normalized().dot(lase_base_pos) - (sat_pos_m_b_k_1 - lase_base_pos).normalized().dot(lase_base_pos);
+			DeltaD_bs = (sat_pos_b_s_k - lase_base_pos).normalized().dot(sat_pos_b_s_k) - (sat_pos_s_b_k_1 - lase_base_pos).normalized().dot(sat_pos_s_b_k_1);
+			DeltaG_bs = (sat_pos_b_s_k - lase_base_pos).normalized().dot(lase_base_pos) - (sat_pos_s_b_k_1 - lase_base_pos).normalized().dot(lase_base_pos);
 
 			tdmsrb_carrier = (u_iSV.carrier_phase - u_last_iSV.carrier_phase - DeltaD_bs + DeltaG_bs) 
 						   - (u_master_SV.carrier_phase - u_last_master_SV.carrier_phase - DeltaD_bm + DeltaG_bm)
