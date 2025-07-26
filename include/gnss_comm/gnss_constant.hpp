@@ -539,6 +539,7 @@ namespace gnss_comm
 		double sat_ddt;
 		int sat_id;
 		double elevation;
+		double pr_std, cp_std, dopp_std;
 
 		gtime_t ttx; // time of transmission
 		bool initialized = false;
