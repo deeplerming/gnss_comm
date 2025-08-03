@@ -540,6 +540,7 @@ namespace gnss_comm
 		int sat_id;
 		double elevation;
 		double pr_std, cp_std, dopp_std;
+		double pr_uura, cp_uura, dopp_uura; // user range accuracy
 
 		gtime_t ttx; // time of transmission
 		bool initialized = false;
@@ -560,7 +561,7 @@ namespace gnss_comm
 		std::map<int, SatelliteData> sat2satdata;
 		std::map<int, ObsPtr> sat2obs;
 		std::vector<double> svdt, svddt, tgd, ion_delay, tro_delay;
-		std::vector<double> pr_uura, dp_uura;
+		std::vector<double> pr_uura, dp_uura, cp_uura;
 		std::vector<int> freq_idx;
 		std::vector<double> freqs;
 		int mPrn = -1;
