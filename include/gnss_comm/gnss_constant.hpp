@@ -221,8 +221,8 @@ namespace gnss_comm
     #define EPSILON_PVT             1e-8                // PVT terminate condition
     #define MAX_ITER_PVT            30                  // PVT maximum iteration number
     #define RANGE_FREQ              1                   // Range measurement frequency
-    #define R2D                     (180.0/M_PI)        // radius to degree
-    #define D2R                     (M_PI/180.0)        // degree to radius
+    #define R_D                     (180.0/M_PI)        // radius to degree
+    #define D_R                     (M_PI/180.0)        // degree to radius
     #define SC2RAD                  3.1415926535898     /* semi-circle to radian (IS-GPS) */
     #define SIN_N5                  -0.0871557427476582 // sin(-5.0 deg)
     #define COS_N5                   0.9961946980917456 // cos(-5.0 deg)
