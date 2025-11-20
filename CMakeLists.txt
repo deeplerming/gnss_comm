@@ -24,6 +24,9 @@ add_message_files(FILES
     GnssSvsMsg.msg
     GnssTimePulseInfoMsg.msg
     StampedFloat64Array.msg
+	GnssObsProcessedMsg.msg
+	GnssTDMeas.msg
+	GnssDDMeas.msg
 )
 
 generate_messages(

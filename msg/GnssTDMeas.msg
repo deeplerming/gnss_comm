@@ -1,0 +1,10 @@
+GnssTimeMsg time
+
+GnssObsProcessedMsg LastMObs
+GnssObsProcessedMsg LastIObs
+GnssObsProcessedMsg CurMObs
+GnssObsProcessedMsg CurIObs
+
+float64 td_carrier
+float64 wavelength
+float64 var

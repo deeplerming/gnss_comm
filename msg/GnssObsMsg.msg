@@ -14,4 +14,4 @@ float64[] dopp      # Doppler measurement [Hz]
 float64[] dopp_std  # Doppler standard deviation [Hz]
 # tracking status. bit_0:psr valid, bit_1:cp valid, 
 # bit_2:half cp valid, bit_3:half cp subtracted
-uint8[]   status    
+uint8[]   status

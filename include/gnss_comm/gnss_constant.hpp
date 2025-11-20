@@ -504,30 +504,11 @@ struct SatState
 typedef std::shared_ptr<SatState> SatStatePtr;
 struct SatelliteData
 {
-    SatelliteData()
-        : pseudorange(0)
-        , carrier_phase(0)
-        , sat_id(0)
-        , elevation(0)
-    {
-        initialized = true;
-    }
-    SatelliteData(double psr, double cp, Eigen::Vector3d satpos, double satclk, uint32_t sat_id,
-                  double ele)
-    {
-        pseudorange = psr;
-        carrier_phase = cp;
-        sat_pos = satpos;
-        sat_clk = satclk;
-        this->sat_id = sat_id;
-        elevation = ele;
-        initialized = true;
-    }
+    SatelliteData();
     double pseudorange;
     double carrier_phase;
     double doppler;
     double wavelength;
-    double ar_f;
     Eigen::Vector3d sat_pos;
     Eigen::Vector3d sat_vel;
     double sat_clk;
@@ -538,7 +519,6 @@ struct SatelliteData
     double pr_uura, cp_uura, dopp_uura;   // user range accuracy
 
     gtime_t ttx;   // time of transmission
-    bool initialized = false;
 };
 typedef std::shared_ptr<SatelliteData> SatelliteDataPtr;
 
@@ -677,16 +657,6 @@ struct TimeDiffDMeasurement
 
 struct TimeDiffMSMeasurement
 {
-    SatelliteData u_master_SV;
-    SatelliteData u_iSV;
-    SatelliteData r_master_SV;
-    SatelliteData r_iSV;
-
-    SatelliteData u_last_master_SV;
-    SatelliteData u_last_iSV;
-    SatelliteData r_last_master_SV;
-    SatelliteData r_last_iSV;
-
     SatelliteData iSV;
     SatelliteData master_SV;
     SatelliteData last_master_SV;
