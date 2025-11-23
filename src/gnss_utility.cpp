@@ -335,11 +335,11 @@ namespace gnss_comm
     Eigen::Vector3d geo2ecef(const Eigen::Vector3d &lla)
     {
         Eigen::Vector3d xyz;
-        const double cos_lat = std::cos(lla(0)*D_R);
-        const double sin_lat = std::sin(lla(0)*D_R);
+        const double cos_lat = std::cos(lla(0)*D2R);
+        const double sin_lat = std::sin(lla(0)*D2R);
         const double N = EARTH_SEMI_MAJOR / std::sqrt(1 - EARTH_ECCE_2*sin_lat*sin_lat);
-        xyz.x() = (N + lla(2)) * cos_lat * std::cos(lla(1)*D_R);
-        xyz.y() = (N + lla(2)) * cos_lat * std::sin(lla(1)*D_R);
+        xyz.x() = (N + lla(2)) * cos_lat * std::cos(lla(1)*D2R);
+        xyz.y() = (N + lla(2)) * cos_lat * std::sin(lla(1)*D2R);
         xyz.z() = (N*(1-EARTH_ECCE_2) + lla(2)) * sin_lat;
         return xyz;
     }
@@ -376,13 +376,13 @@ namespace gnss_comm
         double sin_lat = s1 / h;
         double cos_lat = s2 / h;
         double lat = atan(tan_lat);
-        double lat_deg = lat * R_D;
+        double lat_deg = lat * R2D;
 
         double N = a2 * pow((a2 * cos_lat * cos_lat + b2 * sin_lat * sin_lat), -0.5);
         double altM = p / cos_lat - N;
 
         double lon = atan2(xyz.y(), xyz.x());
-        double lon_deg = lon * R_D;
+        double lon_deg = lon * R2D;
         lla << lat_deg, lon_deg, altM;
         return lla;
     }
@@ -732,7 +732,7 @@ namespace gnss_comm
 
     Eigen::Vector3d ecef2enu(const Eigen::Vector3d &ref_lla, const Eigen::Vector3d &v_ecef)
     {
-        double lat = ref_lla.x() * D_R, lon = ref_lla.y() * D_R;
+        double lat = ref_lla.x() * D2R, lon = ref_lla.y() * D2R;
         double sin_lat = sin(lat), cos_lat = cos(lat);
         double sin_lon = sin(lon), cos_lon = cos(lon);
         Eigen::Matrix3d R_enu_ecef;
@@ -744,7 +744,7 @@ namespace gnss_comm
 
     Eigen::Matrix3d geo2rotation(const Eigen::Vector3d &ref_geo)
     {
-        double lat = ref_geo.x() * D_R, lon = ref_geo.y() * D_R;
+        double lat = ref_geo.x() * D2R, lon = ref_geo.y() * D2R;
         double sin_lat = sin(lat), cos_lat = cos(lat);
         double sin_lon = sin(lon), cos_lon = cos(lon);
         Eigen::Matrix3d R_ecef_enu;
@@ -854,7 +854,7 @@ namespace gnss_comm
         double e=6.108*humi*exp((17.15*temp-4684.0)/(temp-38.45));
         
         /* saastamoninen model */
-        double zhd=0.0022768*pres/(1.0-0.00266*cos(2.0*rev_lla.x()*D_R)-0.00028*hgt/1E3);
+        double zhd=0.0022768*pres/(1.0-0.00266*cos(2.0*rev_lla.x()*D2R)-0.00028*hgt/1E3);
         double zwd=0.002277*(1255.0/temp+0.05)*e;
 
         double mapfh = 0.0, mapfw = 0.0;

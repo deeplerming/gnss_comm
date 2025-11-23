@@ -19,6 +19,9 @@
 */
 
 #include "gnss_ros.hpp"
+#include "gnss_comm/GnssDDMeasMsg.h"
+#include "gnss_comm/GnssObsProcessedMsg.h"
+#include "gnss_comm/GnssTDMeasMsg.h"
 #include "gnss_constant.hpp"
 #include <vector>
 
@@ -321,4 +324,95 @@ namespace gnss_comm
         }
         return svs_msg;
     }
+
+	GnssObsProcessedMsg SatelliteData2ObsProcessedMsg(const SatelliteData &sat_data)
+	{
+		GnssObsProcessedMsg obs_processed_msg;
+		uint32_t week = 0;
+		double tow = time2gpst(sat_data.ttx, &week);
+		obs_processed_msg.time.week = week;
+		obs_processed_msg.time.tow = tow;
+		obs_processed_msg.sat = sat_data.sat_id;
+
+		obs_processed_msg.psr = sat_data.pseudorange;
+		obs_processed_msg.psr_std = sat_data.pr_std;
+		obs_processed_msg.cp = sat_data.carrier_phase;
+		obs_processed_msg.cp_std = sat_data.cp_std;
+		obs_processed_msg.dopp = sat_data.doppler;
+		obs_processed_msg.dopp_std = sat_data.dopp_std;
+
+		obs_processed_msg.wavelength = sat_data.wavelength;
+		obs_processed_msg.sat_pos = {sat_data.sat_pos[0], sat_data.sat_pos[1], sat_data.sat_pos[2]};
+		obs_processed_msg.sat_vel = {sat_data.sat_vel[0], sat_data.sat_vel[1], sat_data.sat_vel[2]};
+		obs_processed_msg.sat_clk = sat_data.sat_clk;
+		obs_processed_msg.sat_ddt = sat_data.sat_ddt;
+		obs_processed_msg.elevation = sat_data.elevation;
+
+		return obs_processed_msg;
+	}
+
+	GnssDDMeasMsg ddmeas2msg(const std::map<int, DDMeasurement> &dd_obs)
+	{
+		GnssDDMeasMsg ddmeas_msg;
+		for (const auto &item : dd_obs)
+		{
+			const DDMeasurement &dd_measurement = item.second;
+			GnssDDObsMsg dd_obs_msg;
+			GnssObsProcessedMsg UmObs = SatelliteData2ObsProcessedMsg(dd_measurement.u_master_SV);
+			GnssObsProcessedMsg UiObs = SatelliteData2ObsProcessedMsg(dd_measurement.u_iSV);
+			GnssObsProcessedMsg RmObs = SatelliteData2ObsProcessedMsg(dd_measurement.r_master_SV);
+			GnssObsProcessedMsg RiObs = SatelliteData2ObsProcessedMsg(dd_measurement.r_iSV);
+
+			dd_obs_msg.UmObs = UmObs;
+			dd_obs_msg.UiObs = UiObs;
+			dd_obs_msg.RmObs = RmObs;
+			dd_obs_msg.RiObs = RiObs;
+
+			uint32_t week = 0;
+			double tow = time2gpst(dd_measurement.ttx, &week);
+			dd_obs_msg.time.week = week;
+			dd_obs_msg.time.tow = tow;
+			dd_obs_msg.var_pr = dd_measurement.var_pr;
+			dd_obs_msg.var_cp = dd_measurement.var_cp;
+			dd_obs_msg.var_dopp = dd_measurement.var_dopp;
+			dd_obs_msg.dd_pseudorange = dd_measurement.dd_pseudorange;
+			dd_obs_msg.dd_carrier_phase = dd_measurement.dd_carrier_phase;
+			dd_obs_msg.dd_doppler = dd_measurement.dd_doppler;
+
+			ddmeas_msg.DDMeas.push_back(dd_obs_msg);
+		}
+		ddmeas_msg.header.stamp = ros::Time(time2sec(dd_obs.begin()->second.ttx));
+		return ddmeas_msg;
+	}
+
+	GnssTDMeasMsg tdmeas2msg(const std::map<int, TimeDiffMSMeasurement> &tdmeas_ptr)
+	{
+		GnssTDMeasMsg tdmeas_msg;
+		for (const auto &item : tdmeas_ptr)
+		{
+			const TimeDiffMSMeasurement &td_measurement = item.second;
+			GnssTDObsMsg td_obs_msg;
+			GnssObsProcessedMsg masterObs = SatelliteData2ObsProcessedMsg(td_measurement.master_SV);
+			GnssObsProcessedMsg slaveObs = SatelliteData2ObsProcessedMsg(td_measurement.iSV);
+			GnssObsProcessedMsg lastMasterObs = SatelliteData2ObsProcessedMsg(td_measurement.last_master_SV);
+			GnssObsProcessedMsg lastSlaveObs = SatelliteData2ObsProcessedMsg(td_measurement.last_iSV);
+
+			td_obs_msg.CurMObs = masterObs;
+			td_obs_msg.CurIObs = slaveObs;
+			td_obs_msg.LastMObs = lastMasterObs;
+			td_obs_msg.LastIObs = lastSlaveObs;
+
+			uint32_t week = 0;
+			double tow = time2gpst(td_measurement.ttx, &week);
+			td_obs_msg.time.week = week;
+			td_obs_msg.time.tow = tow;
+
+			td_obs_msg.var = td_measurement.var;
+			td_obs_msg.td_carrier = td_measurement.tdms_carrier;
+
+			tdmeas_msg.TDMeas.push_back(td_obs_msg);
+		}
+		tdmeas_msg.header.stamp = ros::Time(time2sec(tdmeas_ptr.begin()->second.iSV.ttx));
+		return tdmeas_msg;
+	}
 }   // namespace gnss_comm

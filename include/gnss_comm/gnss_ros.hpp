@@ -33,6 +33,13 @@
 #include <gnss_comm/GnssTimePulseInfoMsg.h>
 #include <gnss_comm/StampedFloat64Array.h>
 
+#include <gnss_comm/GnssDDMeasMsg.h>
+#include <gnss_comm/GnssDDObsMsg.h>
+#include <gnss_comm/GnssTDObsMsg.h>
+#include <gnss_comm/GnssTDMeasMsg.h>
+#include <gnss_comm/GnssObsProcessedMsg.h>
+
+
 #include "gnss_constant.hpp"
 #include "gnss_utility.hpp"
 
@@ -108,7 +115,13 @@ namespace gnss_comm
     * args   : std::vector<SvInfo> & svs      I   GNSS space vehicles' info
     * return : cooresponding GNSS space vehicle info message
     *-----------------------------------------------------------------------------*/
-    GnssSvsMsg svs2msg(const std::vector<SvInfo> &svs);
+    GnssObsProcessedMsg SatelliteData2ObsProcessedMsg(const SatelliteData &sat_data);
+	
+	GnssSvsMsg svs2msg(const std::vector<SvInfo> &svs);
+
+	GnssDDMeasMsg ddmeas2msg(const std::map<int, DDMeasurement> &dd_obs);
+
+	GnssTDMeasMsg tdmeas2msg(const std::map<int, TimeDiffMSMeasurement> &tdmeas_ptr);
 
 }   // namespace gnss_comm
 

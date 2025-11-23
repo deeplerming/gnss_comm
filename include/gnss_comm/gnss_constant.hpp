@@ -504,7 +504,7 @@ struct SatState
 typedef std::shared_ptr<SatState> SatStatePtr;
 struct SatelliteData
 {
-    SatelliteData();
+    SatelliteData() {}
     double pseudorange;
     double carrier_phase;
     double doppler;
@@ -577,9 +577,7 @@ struct DDMeasurement
     {}
     DDMeasurement(double dd_carrier_phase, double dd_pseudorange, double dd_doppler,
                   SatelliteData base_master_SV, SatelliteData base_iSV,
-                  SatelliteData rover_master_SV, SatelliteData rover_iSV,
-
-                  double wavelength)
+                  SatelliteData rover_master_SV, SatelliteData rover_iSV, double wavelength)
     {
         this->dd_carrier_phase = dd_carrier_phase;
         this->dd_pseudorange = dd_pseudorange;
@@ -589,10 +587,10 @@ struct DDMeasurement
         this->r_master_SV = rover_master_SV;
         this->r_iSV = rover_iSV;
 
-		double sin_rover_iSV_elevation = std::sin(rover_iSV.elevation);
-		double sin_rover_master_elevation = std::sin(rover_master_SV.elevation);
-		double sin_base_iSV_elevation = std::sin(base_iSV.elevation);
-		double sin_base_master_elevation = std::sin(base_master_SV.elevation);
+        double sin_rover_iSV_elevation = std::sin(rover_iSV.elevation);
+        double sin_rover_master_elevation = std::sin(rover_master_SV.elevation);
+        double sin_base_iSV_elevation = std::sin(base_iSV.elevation);
+        double sin_base_master_elevation = std::sin(base_master_SV.elevation);
         // 计算 var_pr 和 var_cp
         this->var_pr =
             (sin_base_master_elevation * sin_base_master_elevation / base_master_SV.pr_uura +
@@ -610,19 +608,10 @@ struct DDMeasurement
 
         // 设定波长
         this->wavelength = wavelength;
+        this->ttx = base_iSV.ttx;
     }
-    void clear()
-    {
-        u_iSV = SatelliteData();
-        u_master_SV = SatelliteData();
-        r_iSV = SatelliteData();
-        r_master_SV = SatelliteData();
-        var_pr = 0.0;
-        var_cp = 0.0;
-        dd_pseudorange = 0.0;
-        dd_carrier_phase = 0.0;
-        wavelength = 0.0;
-    }
+	~DDMeasurement()
+	{}
 };
 
 struct TripleDMeasurement
@@ -686,26 +675,24 @@ struct TimeDiffMSMeasurement
         double sin_base_iSV_elevation = std::sin(sat.elevation);
         double sin_base_master_elevation = std::sin(master_sat.elevation);
         // 计算 var 值
-        this->var =
-            (sin_base_iSV_elevation * sin_base_iSV_elevation / this->iSV.cp_uura +
-             sin_base_master_elevation * sin_base_master_elevation / this->master_SV.cp_uura +
-             sin_last_base_iSV_elevation * sin_last_base_iSV_elevation / this->last_iSV.cp_uura +
-             sin_last_base_master_elevation * sin_last_base_master_elevation /
-                 this->last_master_SV.cp_uura) /
-            4.0;
+        this->var = (sin_base_iSV_elevation * sin_base_iSV_elevation / sat.cp_uura +
+                     sin_base_master_elevation * sin_base_master_elevation / master_sat.cp_uura +
+                     sin_last_base_iSV_elevation * sin_last_base_iSV_elevation / last_sat.cp_uura +
+                     sin_last_base_master_elevation * sin_last_base_master_elevation /
+                         last_master_sat.cp_uura) /
+                    4.0;
 
         // 计算时钟差
-        double b_delta_clk_s = (this->iSV.sat_clk - this->last_iSV.sat_clk) * LIGHT_SPEED;
-        double b_delta_clk_m =
-            (this->master_SV.sat_clk - this->last_master_SV.sat_clk) * LIGHT_SPEED;
+        double b_delta_clk_s = (sat.sat_clk - last_sat.sat_clk) * LIGHT_SPEED;
+        double b_delta_clk_m = (master_sat.sat_clk - last_master_sat.sat_clk) * LIGHT_SPEED;
 
         // 计算 tdms_carrier
-        this->tdms_carrier = this->iSV.carrier_phase - this->last_iSV.carrier_phase -
-                             this->master_SV.carrier_phase + this->last_master_SV.carrier_phase -
-                             b_delta_clk_s + b_delta_clk_m;
+        this->tdms_carrier = sat.carrier_phase - last_sat.carrier_phase - master_sat.carrier_phase +
+                             last_master_sat.carrier_phase - b_delta_clk_s + b_delta_clk_m;
 
         // 设置波长
         this->wavelength = wavelength;
+        this->ttx = sat.ttx;
     }
 
     void clear()
@@ -738,10 +725,7 @@ struct TimeDiffMSRBMeasurement
                             SatelliteData u_last_master_SV_, SatelliteData u_last_iSV_,
                             SatelliteData r_last_master_SV_, SatelliteData r_last_iSV_,
                             Eigen::Vector3d last_position_, Eigen::Vector3d last_base_pos_)
-        : var(0.0)
-        , tdmsrb_carrier(0.0)
-        , wavelength(0.0)
-        , u_master_SV(u_master_SV_)
+        : u_master_SV(u_master_SV_)
         , u_iSV(u_iSV_)
         , r_master_SV(r_master_SV_)
         , r_iSV(r_iSV_)
@@ -751,6 +735,9 @@ struct TimeDiffMSRBMeasurement
         , r_last_iSV(r_last_iSV_)
         , last_rover_pos(last_position_)
         , lase_base_pos(last_base_pos_)
+        , var(0.0)
+        , tdmsrb_carrier(0.0)
+        , wavelength(0.0)
     {
         double DeltaD_rs, DeltaD_rm, DeltaD_bm, DeltaD_bs;
         double DeltaG_rs, DeltaG_rm, DeltaG_bm, DeltaG_bs;
