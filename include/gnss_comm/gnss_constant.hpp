@@ -581,7 +581,7 @@ struct DDMeasurement
     SatelliteData r_iSV;         // 基站副卫星
 
     // 双差伪距和载波相位
-    double var_pr, var_cp, var_dopp;   // 伪距和载波相位的方差
+    double weight_pr, weight_cp, weight_dopp;   // 伪距和载波相位的方差
     double dd_pseudorange;             // 双差伪距
     double dd_carrier_phase;           // 双差载波相位
     double dd_doppler;                 // 双差多普勒频率
@@ -590,8 +590,8 @@ struct DDMeasurement
 
     // 构造函数
     DDMeasurement()
-        : var_pr(0.0)
-        , var_cp(0.0)
+        : weight_pr(0.0)
+        , weight_cp(0.0)
         , dd_pseudorange(0.0)
         , dd_carrier_phase(0.0)
     {}
@@ -614,31 +614,39 @@ struct DDMeasurement
 		double sin_base_iSV_elevation = std::sin(base_iSV.elevation);
 		double sin_base_master_elevation = std::sin(base_master_SV.elevation);
         // 计算 var_pr 和 var_cp
-        this->var_pr =
+        this->weight_pr =
             (sin_base_master_elevation * sin_base_master_elevation / base_master_SV.pr_uura +
              sin_base_iSV_elevation * sin_base_iSV_elevation / base_iSV.pr_uura +
              sin_rover_master_elevation * sin_rover_master_elevation / rover_master_SV.pr_uura +
              sin_rover_iSV_elevation * sin_rover_iSV_elevation / rover_iSV.pr_uura) /
             4.0;
 
-        this->var_cp =
+        this->weight_dopp =
             (sin_base_master_elevation * sin_base_master_elevation / base_master_SV.dopp_uura +
              sin_base_iSV_elevation * sin_base_iSV_elevation / base_iSV.dopp_uura +
              sin_rover_master_elevation * sin_rover_master_elevation / rover_master_SV.dopp_uura +
              sin_rover_iSV_elevation * sin_rover_iSV_elevation / rover_iSV.dopp_uura) /
             4.0;
+		
+		this->weight_cp =
+			(sin_base_master_elevation * sin_base_master_elevation / base_master_SV.cp_uura +
+			 sin_base_iSV_elevation * sin_base_iSV_elevation / base_iSV.cp_uura +
+			 sin_rover_master_elevation * sin_rover_master_elevation / rover_master_SV.cp_uura +
+			 sin_rover_iSV_elevation * sin_rover_iSV_elevation / rover_iSV.cp_uura) /
+			4.0;
 
         // 设定波长
         this->wavelength = wavelength;
     }
+	
     void clear()
     {
         u_iSV = SatelliteData();
         u_master_SV = SatelliteData();
         r_iSV = SatelliteData();
         r_master_SV = SatelliteData();
-        var_pr = 0.0;
-        var_cp = 0.0;
+        weight_pr = 0.0;
+        weight_cp = 0.0;
         dd_pseudorange = 0.0;
         dd_carrier_phase = 0.0;
         wavelength = 0.0;
@@ -692,12 +700,12 @@ struct TimeDiffMSMeasurement
     SatelliteData last_master_SV;
     SatelliteData last_iSV;
 
-    double var;
+    double weight;
     double tdms_carrier, wavelength;
     gtime_t ttx;
 
     TimeDiffMSMeasurement()
-        : var(0.0)
+        : weight(0.0)
         , tdms_carrier(0.0)
         , wavelength(0.0)
     {}
@@ -716,7 +724,7 @@ struct TimeDiffMSMeasurement
         double sin_base_iSV_elevation = std::sin(sat.elevation);
         double sin_base_master_elevation = std::sin(master_sat.elevation);
         // 计算 var 值
-        this->var =
+        this->weight =
             (sin_base_iSV_elevation * sin_base_iSV_elevation / this->iSV.cp_uura +
              sin_base_master_elevation * sin_base_master_elevation / this->master_SV.cp_uura +
              sin_last_base_iSV_elevation * sin_last_base_iSV_elevation / this->last_iSV.cp_uura +
@@ -740,7 +748,7 @@ struct TimeDiffMSMeasurement
 
     void clear()
     {
-        var = 0.0;
+        weight = 0.0;
         tdms_carrier = 0.0;
         wavelength = 0.0;
     }
@@ -768,10 +776,7 @@ struct TimeDiffMSRBMeasurement
                             SatelliteData u_last_master_SV_, SatelliteData u_last_iSV_,
                             SatelliteData r_last_master_SV_, SatelliteData r_last_iSV_,
                             Eigen::Vector3d last_position_, Eigen::Vector3d last_base_pos_)
-        : var(0.0)
-        , tdmsrb_carrier(0.0)
-        , wavelength(0.0)
-        , u_master_SV(u_master_SV_)
+        : u_master_SV(u_master_SV_)
         , u_iSV(u_iSV_)
         , r_master_SV(r_master_SV_)
         , r_iSV(r_iSV_)
@@ -831,6 +836,13 @@ struct TimeDiffMSRBMeasurement
         wavelength = 0.0;
     }
 };
+
+struct RTKObservationGroup {
+    gtime_t time;
+    std::map<int, DDMeasurement> dd_observations;
+    std::map<int, TripleDMeasurement> td_observations;
+};
+
 }   // namespace gnss_comm
 
 #endif

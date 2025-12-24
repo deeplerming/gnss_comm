@@ -281,7 +281,9 @@ namespace gnss_comm
     *          Eigen::Vector3d v_ecef       I   vector in ecef coordinate {x,y,z}
     * return : vector in local tangental coordinate {e,n,u}
     *-----------------------------------------------------------------------------*/
-    Eigen::Vector3d ecef2enu(const Eigen::Vector3d &pos_lla, const Eigen::Vector3d &v_ecef);
+    Eigen::Vector3d v_ecef2enu(const Eigen::Vector3d &pos_lla, const Eigen::Vector3d &v_ecef);
+
+	Eigen::Vector3d p_ecef2enu(const Eigen::Vector3d &ref_lla, const Eigen::Vector3d &ecef);
 
     /* calculate rotation from ENU frame to ECEF via reference geodetic coordinate  ---
     * args   : Eigen::Vector3d ref_geo      I   reference position in geodetic frame
