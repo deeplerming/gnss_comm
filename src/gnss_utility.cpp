@@ -250,7 +250,27 @@ namespace gnss_comm
         }
         return t;
     }
-
+	/**
+	* @brief 将 double 类型的时间戳转换为 gtime_t 格式
+	* @param t 输入的时间 (秒), 通常是 UNIX 时间戳
+	* @return gtime_t 结构体
+	*/
+	gtime_t d2gtime(double t) {
+		gtime_t gt;
+		
+		// 1. 向下取整获取整数秒
+		// 使用 floor 而不是直接强制转换 (time_t)t，是为了正确处理 1970 年以前的时间(负数)
+		gt.time = (time_t)std::floor(t);
+		// 2. 获取小数部分
+		gt.sec = t - (double)gt.time;
+		// [可选] 鲁棒性处理：防止浮点数精度问题导致 sec >= 1.0
+		// 虽然理论上减去 floor 后不会 >= 1.0，但为了保险
+		if (gt.sec >= 1.0) {
+			gt.time += 1;
+			gt.sec -= 1.0;
+		}
+		return gt;
+	}
     /* utc to gpstime --------------------------------------------------------------
     * convert utc to gpstime considering leap seconds
     * args   : gtime_t t        I   time expressed in utc
@@ -967,6 +987,67 @@ namespace gnss_comm
 
         return -1.0;
     }
+
+	double L2_freq(const ObsPtr &obs, int *l2_idx)
+	{
+		const uint32_t sys = satsys(obs->sat, NULL);
+		double freq_min = -1.0;
+		double freq_max = -1.0;
+		
+		// 1. 设置频段范围
+		if (sys == SYS_GPS)
+		{
+			// GPS L2 (1227.60 MHz)
+			freq_min = freq_max = FREQ2; 
+		}
+		else if (sys == SYS_GAL)
+		{
+			// u-blox F9P 接收的是 Galileo E5b (1207.14 MHz)
+			// 在 RTKLIB 定义中，E5b 通常对应 FREQ7，也可能有些驱动将其映射为 FREQ2
+			// 为了稳健，这里直接指定 E5b 的频率
+			freq_min = freq_max = 1.20714e9; // 或者使用 FREQ7
+		}
+		else if (sys == SYS_BDS)
+		{
+			// BeiDou B2I (1207.14 MHz)
+			freq_min = freq_max = FREQ1_BDS; // 注意：检查你的头文件，B2通常是FREQ2_BDS
+			// 修正：通常 B2 是 1.20714e9
+			freq_min = freq_max = 1.20714e9; // 或者 FREQ2_BDS
+		}
+		else if (sys == SYS_GLO)
+		{
+			// GLONASS L2 (FDMA)
+			// 中心频率 1246 MHz，频间距 0.4375 MHz
+			// 频率范围 k = -7 ~ +6
+			freq_min = FREQ2_GLO - 7 * DFRQ2_GLO;
+			freq_max = FREQ2_GLO + 6 * DFRQ2_GLO;
+		}
+
+		// 2. 初始化索引
+		if (l2_idx != NULL)
+			*l2_idx = -1;
+		
+		// 如果该卫星系统不在支持列表中，直接返回
+		if (freq_min < 0) return -1.0;
+
+		// 3. 搜索匹配的频率
+		// 由于浮点数比较，建议给一个微小的容差，或者像你原代码那样直接比较(如果是赋值得来的通常没问题)
+		// 这里为了稳健性，稍微放宽一点 min/max 查找逻辑（针对频偏）
+		double epsilon = 1e3; // 1kHz 容差，防止浮点精度问题
+
+		for (uint32_t i = 0; i < obs->freqs.size(); ++i)
+		{
+			// 检查是否在范围内 (考虑 float 误差)
+			if (obs->freqs[i] >= (freq_min - epsilon) && obs->freqs[i] <= (freq_max + epsilon))
+			{
+				if (l2_idx != NULL)
+					*l2_idx = static_cast<int>(i);
+				return obs->freqs[i];
+			}
+		}
+
+		return -1.0;
+	}
 
     uint32_t str2sat(const std::string &sat_str)
     {

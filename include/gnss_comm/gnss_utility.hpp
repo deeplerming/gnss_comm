@@ -132,7 +132,7 @@ namespace gnss_comm
     * notes  : ignore slight time offset under 100 ns
     *-----------------------------------------------------------------------------*/
     gtime_t gpst2utc(gtime_t t);
-
+	gtime_t d2gtime(double t);
     /* utc to gpstime --------------------------------------------------------------
     * convert utc to gpstime considering leap seconds
     * args   : gtime_t t        I   time expressed in utc
@@ -335,7 +335,7 @@ namespace gnss_comm
     * return : L1 frequency (negative if L1 frequency not exists)
     *-----------------------------------------------------------------------------*/
     double L1_freq(const ObsPtr &obs, int *l1_idx);
-
+	double L2_freq(const ObsPtr &obs, int *l2_idx);
     /* execute the given command  ---------------------------------------------------------
     * args   : std::string    cmd        I   command to execute
     * return : execute result 
